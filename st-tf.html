@@ -20,6 +20,8 @@
         border-radius: 10px;
         min-height: 95vh;
         box-shadow: 0 0 30px rgba(139, 101, 8, 0.2) inset;
+        display: flex;
+        flex-direction: column;
     }
 
     h1, h2, h3, h4 { 
@@ -106,6 +108,30 @@
 
     .loading-dots:after { content: '.'; animation: dots 1.5s steps(5, end) infinite; }
     @keyframes dots { 0%, 20% { content: '.'; } 40% { content: '..'; } 60%, 100% { content: '...'; } }
+
+    /* --- NOWY KOD - STYLE PRZYCISKU DONATE --- */
+    .donate-footer {
+        margin-top: auto; /* Wypycha stopkę na sam dół */
+        padding-top: 30px;
+        text-align: center;
+    }
+    .donate-link {
+        color: #a98f5a;
+        text-decoration: none;
+        font-family: 'Cinzel', serif;
+        font-size: 0.85em;
+        opacity: 0.6;
+        transition: 0.3s;
+        border-bottom: 1px dashed transparent;
+        padding-bottom: 2px;
+    }
+    .donate-link:hover {
+        opacity: 1;
+        color: #d4af37;
+        border-bottom-color: #d4af37;
+        text-shadow: 0 0 8px rgba(212, 175, 55, 0.5);
+    }
+    /* ----------------------------------------- */
 
     @media (max-width: 600px) {
         body { margin: 5px; padding: 10px; border-width: 2px; }
@@ -214,6 +240,9 @@
     </div>
 </div>
 
+<div class="donate-footer">
+    <a href="Thttps://ko-fi.com/pogromca" target="_blank" class="donate-link">☕ Wrzuć monetę do sakwy Mistrza Gry</a>
+</div>
 <script>
     // --- KONFIGURACJA TWOJEGO SERWERA RENDER / RAILWAY ---
     const PEER_CONFIG = {
