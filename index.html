@@ -2,31 +2,42 @@
 <html lang="pl">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0, viewport-fit=cover">
 <title>Próba Alchemików - Pojedynek Umysłów</title>
 <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=MedievalSharp&display=swap" rel="stylesheet">
 <style>
-    * { box-sizing: border-box; }
+    * { 
+        box-sizing: border-box; 
+        -webkit-tap-highlight-color: transparent; /* Usuwa niebieskie mignięcie przy klikaniu na telefonie */
+    }
+
+    html {
+        overflow-x: hidden;
+        background: #0a0604;
+    }
 
     body {
         font-family: 'MedievalSharp', cursive, serif;
         background: radial-gradient(circle at center, #2b1d14 0%, #0a0604 100%);
-        color: #e6d3a8; /* Pergaminowy / Złoty */
+        background-attachment: fixed;
+        color: #e6d3a8; 
+        width: 100%;
         max-width: 800px;
         margin: 20px auto;
         padding: 20px;
         border: 4px double #8b6508;
         border-radius: 10px;
-        min-height: 95vh;
+        min-height: calc(100vh - 40px);
         box-shadow: 0 0 30px rgba(139, 101, 8, 0.2) inset;
         display: flex;
         flex-direction: column;
+        overflow-x: hidden;
     }
 
     h1, h2, h3, h4 { 
         font-family: 'Cinzel', serif; 
-        color: #d4af37; /* Złoty */
+        color: #d4af37; 
         border-bottom: 1px solid #8b6508; 
         padding-bottom: 10px; 
         margin-top: 0; 
@@ -34,17 +45,18 @@
         text-shadow: 1px 1px 2px #000;
     }
 
-    h1 { text-align: center; border-bottom: 2px solid #8b0000; }
+    h1 { text-align: center; border-bottom: 2px solid #8b0000; font-size: 2em; }
 
+    /* Pola tekstowe muszą mieć min 16px, inaczej iOS Safari robi zoom */
     input[type="text"], input[type="text"]:disabled {
         background: #1c120c;
         color: #e6d3a8;
         border: 1px solid #8b6508;
-        padding: 10px;
+        padding: 15px 12px; /* Grubsze paddingi */
         width: 100%;
         font-family: inherit;
-        font-size: 1.1em;
-        margin: 5px 0;
+        font-size: 16px !important; 
+        margin: 5px 0 10px 0;
         outline: none;
         border-radius: 3px;
     }
@@ -54,62 +66,75 @@
         background: linear-gradient(to bottom, #8b6508, #5c4305);
         color: #fff;
         border: 1px solid #d4af37;
-        padding: 12px 15px;
-        margin: 10px 5px 10px 0;
+        padding: 15px; /* Wyższe przyciski - łatwiejsze do kliknięcia na telefonie */
+        margin: 5px 0 10px 0;
         font-family: 'Cinzel', serif;
+        font-size: 16px;
         font-weight: bold;
         cursor: pointer;
         transition: 0.3s;
         border-radius: 3px;
         text-shadow: 1px 1px 2px #000;
+        width: 100%; /* Przyciski na 100% szerokości domyślnie ułatwiają obsługę jedną ręką */
     }
+    @media (min-width: 601px) {
+        button { width: auto; margin-right: 5px; } /* Na komputerze wracają do starego wyglądu */
+        .rank-btn { width: 100%; }
+        #voting-area button { width: auto; }
+    }
+
     button:hover { background: linear-gradient(to bottom, #d4af37, #8b6508); color: #000; text-shadow: none; }
     button:disabled { background: #33241b; color: #7a6352; border-color: #33241b; cursor: not-allowed; text-shadow: none;}
 
     .hidden { display: none !important; }
-    .panel { margin-top: 20px; padding: 15px; border: 1px solid #8b6508; background: rgba(0,0,0,0.4); border-radius: 5px; }
-    #status { font-size: 1.1em; text-align: center; margin-bottom: 20px; word-wrap: break-word; color: #a98f5a; }
+    .panel { margin-top: 10px; padding: 15px; border: 1px solid #8b6508; background: rgba(0,0,0,0.4); border-radius: 5px; }
+    #status { font-size: 1.2em; text-align: center; margin-bottom: 15px; word-wrap: break-word; color: #a98f5a; font-weight: bold;}
     
-    .alert { background: rgba(20, 10, 5, 0.8); padding: 15px; border-left: 5px solid #d4af37; margin-bottom: 20px; word-wrap: break-word; }
+    .alert { background: rgba(20, 10, 5, 0.8); padding: 15px; border-left: 5px solid #d4af37; margin-bottom: 20px; word-wrap: break-word; line-height: 1.4; }
     .error { border-left-color: #8b0000; color: #ff4d4d; }
 
-    .lore-box { border: 1px solid #8b0000; text-align: justify; padding: 20px; font-style: italic; background: rgba(139, 0, 0, 0.1); border-radius: 5px; }
+    .lore-box { border: 1px solid #8b0000; text-align: justify; padding: 15px; font-style: italic; background: rgba(139, 0, 0, 0.1); border-radius: 5px; font-size: 1.05em;}
 
     .flex-row { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
 
     .input-group { display: flex; gap: 10px; width: 100%; align-items: stretch; margin-bottom: 10px; }
     .input-group input { flex-grow: 1; margin: 0; }
-    .input-group button { margin: 0; flex-shrink: 0; white-space: nowrap; }
+    .input-group button { margin: 0; flex-shrink: 0; white-space: nowrap; width: auto; }
 
     .timer { font-size: 1.5em; font-weight: bold; color: #8b0000; font-family: 'Cinzel', serif;}
 
-    #chat-history { height: 150px; overflow-y: scroll; border: 1px solid #8b6508; background: rgba(0,0,0,0.6); padding: 10px; margin-bottom: 10px; word-wrap: break-word; border-radius: 3px;}
-    #chat-history p { margin: 4px 0; }
+    #chat-history { height: 180px; overflow-y: scroll; border: 1px solid #8b6508; background: rgba(0,0,0,0.6); padding: 10px; margin-bottom: 10px; word-wrap: break-word; border-radius: 3px; font-size: 1.1em;}
+    #chat-history p { margin: 6px 0; }
     .msg-me { color: #d4af37; }
     .msg-op { color: #bca371; }
     .msg-sys { color: #8b0000; font-weight: bold; font-family: 'Cinzel', serif; }
 
+    #cup-options { display: flex; flex-direction: column; gap: 10px; margin-bottom: 15px; }
+    
     .cup-option {
-        display: inline-block;
         border: 2px solid #8b6508;
         background: #1c120c;
-        padding: 15px;
-        margin: 10px 10px 10px 0;
+        padding: 20px; /* Gigantyczny hitbox dla palca */
         cursor: pointer;
         transition: 0.3s;
         text-align: center;
         border-radius: 5px;
         font-size: 1.2em;
+        font-weight: bold;
     }
+    @media (min-width: 601px) {
+        #cup-options { flex-direction: row; }
+        .cup-option { flex: 1; }
+    }
+
     .cup-option:hover { border-color: #d4af37; box-shadow: 0 0 10px #d4af37 inset; }
     .cup-option.selected { background: #8b0000; color: #fff; font-weight: bold; border-color: #ff4d4d; box-shadow: 0 0 15px #8b0000; }
     
-    .rank-btn { width: 100%; text-align: left; margin-bottom: 5px; font-family: 'MedievalSharp', cursive;}
+    .rank-btn { text-align: left; margin-bottom: 8px; font-family: 'MedievalSharp', cursive; font-size: 1.1em;}
 
     .loading-dots:after { content: '.'; animation: dots 1.5s steps(5, end) infinite; }
     @keyframes dots { 0%, 20% { content: '.'; } 40% { content: '..'; } 60%, 100% { content: '...'; } }
 
-    /* --- KOD - STYLE PRZYCISKU DONATE --- */
     .donate-footer {
         margin-top: auto; 
         padding-top: 30px;
@@ -119,11 +144,13 @@
         color: #a98f5a;
         text-decoration: none;
         font-family: 'Cinzel', serif;
-        font-size: 0.85em;
-        opacity: 0.6;
+        font-size: 0.9em;
+        opacity: 0.7;
         transition: 0.3s;
         border-bottom: 1px dashed transparent;
         padding-bottom: 2px;
+        display: inline-block;
+        padding: 10px; /* Większy obszar klikalny dla donate */
     }
     .donate-link:hover {
         opacity: 1;
@@ -132,18 +159,25 @@
         text-shadow: 0 0 8px rgba(212, 175, 55, 0.5);
     }
 
+    /* MOCNE OPTYMALIZACJE DLA SMARTFONÓW */
     @media (max-width: 600px) {
-        body { margin: 5px; padding: 10px; border-width: 2px; }
-        h1 { font-size: 1.4em; }
-        h3 { font-size: 1.1em; }
+        body { 
+            margin: 0; 
+            padding: 12px; 
+            border: none;
+            border-top: 3px solid #8b6508;
+            border-radius: 0;
+            min-height: 100vh;
+        }
+        h1 { font-size: 1.6em; }
+        h3 { font-size: 1.2em; }
         .flex-row { flex-direction: column; align-items: flex-start; }
         .flex-row .timer { align-self: flex-end; margin-top: -35px; }
-        .input-group { flex-direction: column; }
-        .input-group button { width: 100%; }
-        .cup-option { display: block; width: 100%; margin: 5px 0; }
+        .input-group { flex-direction: column; gap: 5px; }
+        .input-group button { width: 100%; margin: 0; }
         #voting-area button { width: 100%; margin-bottom: 10px; }
-        button { width: 100%; margin: 5px 0; }
         #room-id { word-break: break-all; }
+        .panel { padding: 12px; }
     }
 </style>
 </head>
@@ -173,7 +207,7 @@
 
     <div id="queue-status" class="alert hidden" style="color:#d4af37; margin-top:10px;">
         <span id="queue-text">Rzucam zaklęcie poszukujące</span><span class="loading-dots"></span><br>
-        <button onclick="cancelSearch()" style="background:#8b0000; color:#fff; padding:5px; margin-top:10px;">[ PRZERWIJ INKANTACJĘ ]</button>
+        <button onclick="cancelSearch()" style="background:#8b0000; color:#fff; margin-top:10px;">[ PRZERWIJ INKANTACJĘ ]</button>
     </div>
 
     <hr style="border-color:#8b6508; border-style:dashed; margin: 20px 0;">
@@ -183,7 +217,7 @@
     <div id="host-info" class="hidden alert" style="margin: 10px 0;">
         Twoja Runa Dostępu: <strong id="room-id" style="font-size: 1.5em; color: #d4af37; letter-spacing: 2px;"></strong><br>Czekam aż towarzysz przekroczy próg...
     </div>
-    <br><br>
+    <br>
     <div class="input-group">
         <input type="text" id="join-id" placeholder="Wpisz runę pokoju towarzysza...">
         <button onclick="joinRoom()">[ DOŁĄCZ ]</button>
@@ -203,15 +237,15 @@
     </div>
 
     <div id="action-area">
-        <p id="question-text" style="font-size: 1.2em; font-weight: bold; color: #d4af37;">Wybierz kielich:</p>
+        <p id="question-text" style="font-size: 1.2em; font-weight: bold; color: #d4af37; text-align: center; margin-bottom: 15px;">Wybierz kielich:</p>
         <div id="cup-options"></div>
 
-        <p>Zaklęcie ukryte w myślach (Twój tok rozumowania na kartce):</p>
+        <p style="margin-top:20px;">Zaklęcie ukryte w myślach (Twój tok rozumowania na kartce):</p>
         <input type="text" id="reason-input" placeholder="Zapisz swoje zamiary...">
 
         <div style="margin-top: 15px;">
             <button id="submit-btn" onclick="submitAction()">[ ZAPIECZĘTUJ MYŚLI ]</button>
-            <div id="op-status" style="color: #a98f5a; margin-top: 10px; font-weight: bold; font-style: italic;">[ ] Przeciwnik tka zaklęcie...</div>
+            <div id="op-status" style="color: #a98f5a; margin-top: 10px; font-weight: bold; font-style: italic; text-align: center;">[ ] Przeciwnik tka zaklęcie...</div>
         </div>
     </div>
 </div>
@@ -235,7 +269,7 @@
         <p><strong>Zdecyduj: Czy Wasze intencje (tok rozumowania) były ze sobą zgodne?</strong></p>
         <button id="vote-yes" onclick="submitVote(true)">[ TAK, NASZE MYŚLI SĄ ZGODNE ]</button>
         <button id="vote-no" onclick="submitVote(false)">[ NIE, TO ZUPEŁNIE INNA MAGIA ]</button>
-        <div id="vote-wait" class="hidden" style="margin-top:10px; color:#d4af37; font-weight:bold;">Oczekuję na osąd przeciwnika...</div>
+        <div id="vote-wait" class="hidden" style="margin-top:10px; color:#d4af37; font-weight:bold; text-align: center;">Oczekuję na osąd przeciwnika...</div>
     </div>
 </div>
 
@@ -558,7 +592,7 @@
         else if(survived && state.myRole === 'poisoner') state.opScore++;
 
         let resHtml = `<h3>WYNIK: ${survived ? '<span style="color:#d4af37;">PRZEŻYCIE (+1 punkt)</span>' : '<span style="color:#8b0000;">ŚMIERĆ W MĘCZARNIACH</span>'}</h3>`;
-        resHtml += `<p>Pozycja Jadowitej Krwi: <strong style="color:#ff4d4d">${getLocalCupName(pAction.cup)}</strong> | Wypito: <strong style="color:#e6d3a8">${getLocalCupName(dAction.cup)}</strong></p><hr style="border:1px solid #8b6508;">`;
+        resHtml += `<p>Pozycja Jadowitej Krwi: <strong style="color:#ff4d4d">${getLocalCupName(pAction.cup)}</strong> | Wypito: <strong style="color:#e6d3a8">${getLocalCupName(dAction.cup)}</strong></p><hr style="border:1px solid #8b6508; margin: 15px 0;">`;
         resHtml += `<p><strong>Myśl Nalewającego:</strong> <em>"${pAction.reason}"</em></p>`;
         resHtml += `<p><strong>Myśl Pijącego:</strong> <em>"${dAction.reason}"</em></p>`;
 
