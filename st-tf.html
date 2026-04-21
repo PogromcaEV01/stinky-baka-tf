@@ -1,0 +1,653 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Próba Alchemików - Pojedynek Umysłów</title>
+<script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=MedievalSharp&display=swap" rel="stylesheet">
+<style>
+    * { box-sizing: border-box; }
+
+    body {
+        font-family: 'MedievalSharp', cursive, serif;
+        background: radial-gradient(circle at center, #2b1d14 0%, #0a0604 100%);
+        color: #e6d3a8; /* Pergaminowy / Złoty */
+        max-width: 800px;
+        margin: 20px auto;
+        padding: 20px;
+        border: 4px double #8b6508;
+        border-radius: 10px;
+        min-height: 95vh;
+        box-shadow: 0 0 30px rgba(139, 101, 8, 0.2) inset;
+    }
+
+    h1, h2, h3, h4 { 
+        font-family: 'Cinzel', serif; 
+        color: #d4af37; /* Złoty */
+        border-bottom: 1px solid #8b6508; 
+        padding-bottom: 10px; 
+        margin-top: 0; 
+        word-wrap: break-word; 
+        text-shadow: 1px 1px 2px #000;
+    }
+
+    h1 { text-align: center; border-bottom: 2px solid #8b0000; }
+
+    input[type="text"], input[type="text"]:disabled {
+        background: #1c120c;
+        color: #e6d3a8;
+        border: 1px solid #8b6508;
+        padding: 10px;
+        width: 100%;
+        font-family: inherit;
+        font-size: 1.1em;
+        margin: 5px 0;
+        outline: none;
+        border-radius: 3px;
+    }
+    input[type="text"]:focus { background: #261a12; border-color: #d4af37; box-shadow: 0 0 5px #d4af37; }
+
+    button {
+        background: linear-gradient(to bottom, #8b6508, #5c4305);
+        color: #fff;
+        border: 1px solid #d4af37;
+        padding: 12px 15px;
+        margin: 10px 5px 10px 0;
+        font-family: 'Cinzel', serif;
+        font-weight: bold;
+        cursor: pointer;
+        transition: 0.3s;
+        border-radius: 3px;
+        text-shadow: 1px 1px 2px #000;
+    }
+    button:hover { background: linear-gradient(to bottom, #d4af37, #8b6508); color: #000; text-shadow: none; }
+    button:disabled { background: #33241b; color: #7a6352; border-color: #33241b; cursor: not-allowed; text-shadow: none;}
+
+    .hidden { display: none !important; }
+    .panel { margin-top: 20px; padding: 15px; border: 1px solid #8b6508; background: rgba(0,0,0,0.4); border-radius: 5px; }
+    #status { font-size: 1.1em; text-align: center; margin-bottom: 20px; word-wrap: break-word; color: #a98f5a; }
+    
+    .alert { background: rgba(20, 10, 5, 0.8); padding: 15px; border-left: 5px solid #d4af37; margin-bottom: 20px; word-wrap: break-word; }
+    .error { border-left-color: #8b0000; color: #ff4d4d; }
+
+    .lore-box { border: 1px solid #8b0000; text-align: justify; padding: 20px; font-style: italic; background: rgba(139, 0, 0, 0.1); border-radius: 5px; }
+
+    .flex-row { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
+
+    .input-group { display: flex; gap: 10px; width: 100%; align-items: stretch; margin-bottom: 10px; }
+    .input-group input { flex-grow: 1; margin: 0; }
+    .input-group button { margin: 0; flex-shrink: 0; white-space: nowrap; }
+
+    .timer { font-size: 1.5em; font-weight: bold; color: #8b0000; font-family: 'Cinzel', serif;}
+
+    #chat-history { height: 150px; overflow-y: scroll; border: 1px solid #8b6508; background: rgba(0,0,0,0.6); padding: 10px; margin-bottom: 10px; word-wrap: break-word; border-radius: 3px;}
+    #chat-history p { margin: 4px 0; }
+    .msg-me { color: #d4af37; }
+    .msg-op { color: #bca371; }
+    .msg-sys { color: #8b0000; font-weight: bold; font-family: 'Cinzel', serif; }
+
+    .cup-option {
+        display: inline-block;
+        border: 2px solid #8b6508;
+        background: #1c120c;
+        padding: 15px;
+        margin: 10px 10px 10px 0;
+        cursor: pointer;
+        transition: 0.3s;
+        text-align: center;
+        border-radius: 5px;
+        font-size: 1.2em;
+    }
+    .cup-option:hover { border-color: #d4af37; box-shadow: 0 0 10px #d4af37 inset; }
+    .cup-option.selected { background: #8b0000; color: #fff; font-weight: bold; border-color: #ff4d4d; box-shadow: 0 0 15px #8b0000; }
+    
+    .rank-btn { width: 100%; text-align: left; margin-bottom: 5px; font-family: 'MedievalSharp', cursive;}
+
+    .loading-dots:after { content: '.'; animation: dots 1.5s steps(5, end) infinite; }
+    @keyframes dots { 0%, 20% { content: '.'; } 40% { content: '..'; } 60%, 100% { content: '...'; } }
+
+    @media (max-width: 600px) {
+        body { margin: 5px; padding: 10px; border-width: 2px; }
+        h1 { font-size: 1.4em; }
+        h3 { font-size: 1.1em; }
+        .flex-row { flex-direction: column; align-items: flex-start; }
+        .flex-row .timer { align-self: flex-end; margin-top: -35px; }
+        .input-group { flex-direction: column; }
+        .input-group button { width: 100%; }
+        .cup-option { display: block; width: 100%; margin: 5px 0; }
+        #voting-area button { width: 100%; margin-bottom: 10px; }
+        button { width: 100%; margin: 5px 0; }
+        #room-id { word-break: break-all; }
+    }
+</style>
+</head>
+<body>
+
+<h1>PRÓBA ALCHEMIKÓW</h1>
+
+<div class="lore-box alert">
+    "Witaj w Czeluściach Karczmy pod Kulawym Gryfem. Zbliża się Noc Prób. Dwóch adeptów sztuk alchemicznych zasiada do stołu, lecz tylko jeden zyska tytuł Arcymistrza. Jeden z was wlewa do kielicha Jadowitą Krew, drugi musi wybrać naczynie, z którego wypije. Czyj umysł okaże się bystrzejszy, a dedukcja trafniejsza?"
+</div>
+
+<div id="status">❖ OCZEKIWANIE NA WEZWANIE ❖</div>
+
+<div id="server-status" class="alert" style="border-left-color: #d4af37;">
+    Stan Sfery Astralnej (Serwera): <span style="color:#d4af37;">BADANIE AURY / WYBUDZANIE (do 60s)...</span><span class="loading-dots"></span>
+</div>
+
+<div id="lobby-panel" class="panel">
+    <div id="disconnect-msg" class="alert error hidden"></div>
+
+    <h3>> SALA EGZAMINACYJNA (Ranking)</h3>
+    <p>Wybierz rangę przeciwnika. Magiczna sieć odnajdzie odpowiedniego adepta.</p>
+    <button class="rank-btn" onclick="searchRank(1)">[ RANGA 1 ] Młodzi Uczniowie</button>
+    <button class="rank-btn" onclick="searchRank(2)">[ RANGA 2 ] Adepci Cieni</button>
+    <button class="rank-btn" onclick="searchRank(3)">[ RANGA 3 ] Mistrzowie Iluzji</button>
+    <button class="rank-btn" onclick="searchRank(4)">[ RANGA 4 ] Bezwzględni Arcymagowie</button>
+
+    <div id="queue-status" class="alert hidden" style="color:#d4af37; margin-top:10px;">
+        <span id="queue-text">Rzucam zaklęcie poszukujące</span><span class="loading-dots"></span><br>
+        <button onclick="cancelSearch()" style="background:#8b0000; color:#fff; padding:5px; margin-top:10px;">[ PRZERWIJ INKANTACJĘ ]</button>
+    </div>
+
+    <hr style="border-color:#8b6508; border-style:dashed; margin: 20px 0;">
+
+    <h3>> TAJNY RYTUAŁ (Gra Prywatna)</h3>
+    <button onclick="createRoom()">[ STWÓRZ KRĄG (Pokój) ]</button>
+    <div id="host-info" class="hidden alert" style="margin: 10px 0;">
+        Twoja Runa Dostępu: <strong id="room-id" style="font-size: 1.5em; color: #d4af37; letter-spacing: 2px;"></strong><br>Czekam aż towarzysz przekroczy próg...
+    </div>
+    <br><br>
+    <div class="input-group">
+        <input type="text" id="join-id" placeholder="Wpisz runę pokoju towarzysza...">
+        <button onclick="joinRoom()">[ DOŁĄCZ ]</button>
+    </div>
+</div>
+
+<div id="countdown-panel" class="panel hidden" style="text-align: center;">
+    <h2>WIĘŹ NAWIĄZANA!</h2>
+    <p>Przygotuj się. Rytuał rozpocznie się za:</p>
+    <div id="start-timer" style="font-size: 3em; color: #d4af37; font-family: 'Cinzel', serif;">5</div>
+</div>
+
+<div id="game-panel" class="panel hidden">
+    <div class="flex-row">
+        <h3 id="role-title">❖ FAZA: RYTUAŁ</h3>
+        <div class="timer">CZAS: <span id="round-timer">120</span>s</div>
+    </div>
+
+    <div id="action-area">
+        <p id="question-text" style="font-size: 1.2em; font-weight: bold; color: #d4af37;">Wybierz kielich:</p>
+        <div id="cup-options"></div>
+
+        <p>Zaklęcie ukryte w myślach (Twój tok rozumowania na kartce):</p>
+        <input type="text" id="reason-input" placeholder="Zapisz swoje zamiary...">
+
+        <div style="margin-top: 15px;">
+            <button id="submit-btn" onclick="submitAction()">[ ZAPIECZĘTUJ MYŚLI ]</button>
+            <div id="op-status" style="color: #a98f5a; margin-top: 10px; font-weight: bold; font-style: italic;">[ ] Przeciwnik tka zaklęcie...</div>
+        </div>
+    </div>
+</div>
+
+<div id="vote-panel" class="panel hidden">
+    <div class="flex-row">
+        <h3>❖ FAZA: REWELACJA</h3>
+        <div class="timer">CZAS: <span id="chat-timer">180</span>s</div>
+    </div>
+    
+    <div id="reveal-area" class="alert"></div>
+
+    <h4>> TELEPATYCZNA WIĘŹ (Czat)</h4>
+    <div id="chat-history"></div>
+    <div class="input-group">
+        <input type="text" id="chat-input" placeholder="Przekaż myśl przed werdyktem...">
+        <button onclick="sendChat()">[ PRZEKAŻ ]</button>
+    </div>
+
+    <div id="voting-area" style="margin-top: 20px;">
+        <p><strong>Zdecyduj: Czy Wasze intencje (tok rozumowania) były ze sobą zgodne?</strong></p>
+        <button id="vote-yes" onclick="submitVote(true)">[ TAK, NASZE MYŚLI SĄ ZGODNE ]</button>
+        <button id="vote-no" onclick="submitVote(false)">[ NIE, TO ZUPEŁNIE INNA MAGIA ]</button>
+        <div id="vote-wait" class="hidden" style="margin-top:10px; color:#d4af37; font-weight:bold;">Oczekuję na osąd przeciwnika...</div>
+    </div>
+</div>
+
+<script>
+    // --- KONFIGURACJA TWOJEGO SERWERA RENDER / RAILWAY ---
+    const PEER_CONFIG = {
+        host: 'stinky-baka-render-server.onrender.com', // <-- TUTAJ WPISZ SWÓJ ADRES Z RENDERA/RAILWAY (bez https://)
+        port: 443,
+        path: '/myapp',
+        secure: true
+    };
+
+    let peer = null;
+    let conn = null;
+    let mmPeer = null;
+    let isHost = false;
+
+    let state = {
+        round: 1, maxRounds: 5,
+        myScore: 0, opScore: 0,
+        myRole: '',
+        myAction: null, opAction: null,
+        myVote: null, opVote: null
+    };
+
+    let timerInterval, chatTimerInterval, queueTimeout;
+    let timeLeft = 120, chatTimeLeft = 180;
+
+    const ui = {
+        status: document.getElementById('status'), lobby: document.getElementById('lobby-panel'),
+        countdown: document.getElementById('countdown-panel'), game: document.getElementById('game-panel'),
+        vote: document.getElementById('vote-panel'), hostInfo: document.getElementById('host-info'),
+        roomId: document.getElementById('room-id'), startTimer: document.getElementById('start-timer'),
+        roleTitle: document.getElementById('role-title'), roundTimer: document.getElementById('round-timer'),
+        cupOptions: document.getElementById('cup-options'), reasonInput: document.getElementById('reason-input'),
+        submitBtn: document.getElementById('submit-btn'), opStatus: document.getElementById('op-status'),
+        revealArea: document.getElementById('reveal-area'), chatHistory: document.getElementById('chat-history'),
+        chatInput: document.getElementById('chat-input'), voteWait: document.getElementById('vote-wait'),
+        voteYes: document.getElementById('vote-yes'), voteNo: document.getElementById('vote-no'),
+        chatTimer: document.getElementById('chat-timer'), disconnectMsg: document.getElementById('disconnect-msg'),
+        queueStatus: document.getElementById('queue-status'), queueText: document.getElementById('queue-text')
+    };
+
+    ui.status.innerText = "❖ OCZEKIWANIE NA WEZWANIE ❖";
+
+    let isMatchmaking = false; 
+
+    function searchRank(rank) {
+        ui.disconnectMsg.classList.add('hidden');
+        ui.queueStatus.classList.remove('hidden');
+        ui.queueText.innerText = `Przeszukuję Sferę Astralną (Ranga ${rank})`;
+        
+        let queueId = `trucizna_v1_rank_${rank}`;
+
+        if(mmPeer) mmPeer.destroy();
+        mmPeer = new Peer(PEER_CONFIG);
+        isMatchmaking = true;
+
+        mmPeer.on('open', () => {
+            if(!isMatchmaking) return;
+            
+            let tempConn = mmPeer.connect(queueId, { reliable: true });
+
+            queueTimeout = setTimeout(() => {
+                if(tempConn) tempConn.close();
+                mmPeer.destroy();
+                becomeQueueHost(queueId);
+            }, 6000);
+
+            tempConn.on('open', () => {
+                clearTimeout(queueTimeout);
+                ui.queueText.innerText = `Przeciwnik odnaleziony! Zacieśnianie więzi...`;
+
+                tempConn.on('data', (msg) => {
+                    if(msg.type === 'MATCH_FOUND') {
+                        isMatchmaking = false;
+                        mmPeer.destroy();
+                        setTimeout(() => joinPrivateMatch(msg.data), 500);
+                    }
+                });
+            });
+            
+            mmPeer.on('error', (err) => {
+                if (err.type === 'peer-unavailable') {
+                    clearTimeout(queueTimeout);
+                    mmPeer.destroy();
+                    becomeQueueHost(queueId);
+                }
+            });
+        });
+    }
+
+    function becomeQueueHost(queueId) {
+        if(!isMatchmaking) return;
+        ui.queueText.innerText = `Pustka... Tworzę krąg oczekiwania.`;
+        
+        mmPeer = new Peer(queueId, PEER_CONFIG);
+        
+        mmPeer.on('connection', (tempConn) => {
+            ui.queueText.innerText = `Ktoś odpowiedział na zew! Przygotowywanie...`;
+            
+            tempConn.on('open', () => {
+                let secretRoomId = 'match_' + Math.floor(Math.random() * 999999);
+
+                hostPrivateMatch(secretRoomId, () => {
+                    tempConn.send({ type: 'MATCH_FOUND', data: secretRoomId });
+                    isMatchmaking = false;
+                    setTimeout(() => { if(mmPeer) mmPeer.destroy(); }, 2000);
+                });
+            });
+        });
+
+        mmPeer.on('error', (err) => {
+            if(err.type === 'unavailable-id') {
+                setTimeout(() => searchRank(queueId.slice(-1)), 1000);
+            }
+        });
+    }
+
+    function cancelSearch() {
+        isMatchmaking = false;
+        clearTimeout(queueTimeout);
+        if(mmPeer) mmPeer.destroy();
+        ui.queueStatus.classList.add('hidden');
+    }
+
+    function hostPrivateMatch(roomId, onReadyCallback = null) {
+        isHost = true;
+        if(peer) peer.destroy();
+        
+        peer = new Peer('trucizna_priv_' + roomId, PEER_CONFIG);
+
+        peer.on('open', () => {
+            if(onReadyCallback) onReadyCallback();
+        });
+
+        peer.on('connection', (connection) => {
+            conn = connection;
+            setupConnection();
+            start5SecCountdown();
+        });
+    }
+
+    function joinPrivateMatch(roomId) {
+        isHost = false;
+        if(peer) peer.destroy(); 
+        
+        peer = new Peer(PEER_CONFIG);
+        
+        peer.on('open', () => {
+            conn = peer.connect('trucizna_priv_' + roomId, { reliable: true });
+            setupConnection();
+        });
+    }
+
+    function createRoom() {
+        ui.disconnectMsg.classList.add('hidden');
+        let pin = Math.floor(1000 + Math.random() * 9000);
+        hostPrivateMatch(pin);
+        ui.hostInfo.classList.remove('hidden');
+        ui.roomId.innerText = pin;
+    }
+
+    function joinRoom() {
+        ui.disconnectMsg.classList.add('hidden');
+        let pin = document.getElementById('join-id').value.trim();
+        if(!pin) return alert("Musisz podać Runę Dostępu!");
+        joinPrivateMatch(pin);
+    }
+
+    function setupConnection() {
+        ui.queueStatus.classList.add('hidden');
+        ui.hostInfo.classList.add('hidden');
+        
+        conn.on('open', () => {
+            updateStatus();
+            if(!isHost) start5SecCountdown();
+        });
+
+        conn.on('data', (msg) => {
+            if(msg.type === 'ACTION') {
+                state.opAction = msg.data;
+                ui.opStatus.innerText = "✓ Przeciwnik zapieczętował myśli!";
+                ui.opStatus.style.color = "#d4af37";
+                checkBothSubmitted();
+            }
+            else if(msg.type === 'CHAT') appendChat("Adept", msg.data, "msg-op");
+            else if(msg.type === 'VOTE') { state.opVote = msg.data; checkVotes(); }
+            else if(msg.type === 'NEXT_ROUND') { state.round++; start5SecCountdown(); }
+            else if(msg.type === 'END_GAME') endGame();
+            else if(msg.type === 'KICK') handleKick(msg.data);
+        });
+
+        conn.on('close', () => {
+            if(!ui.lobby.classList.contains('hidden')) return;
+            handleKick("Więź zerwana. Przeciwnik uciekł z Karczmy.");
+        });
+    }
+
+    function kickPlayer(reason) {
+        if(conn && conn.open) {
+            conn.send({ type: 'KICK', data: "Zostałeś wygnany za brak aktywności." });
+            setTimeout(() => conn.close(), 500);
+        }
+        handleKick(reason);
+    }
+
+    function handleKick(reason) {
+        clearInterval(timerInterval); clearInterval(chatTimerInterval); hideAll();
+        ui.lobby.classList.remove('hidden');
+        ui.disconnectMsg.innerText = `> ZAKŁÓCENIE AURY: ${reason}`;
+        ui.disconnectMsg.classList.remove('hidden');
+        ui.status.innerText = "❖ ZERWANO KONTAKT ❖";
+        state.myScore = 0; state.opScore = 0; state.round = 1;
+    }
+
+    function hideAll() { 
+        ui.lobby.classList.add('hidden'); ui.countdown.classList.add('hidden'); 
+        ui.game.classList.add('hidden'); ui.vote.classList.add('hidden'); 
+    }
+
+    function start5SecCountdown() {
+        hideAll(); ui.countdown.classList.remove('hidden');
+        let t = 5; ui.startTimer.innerText = t;
+        let iv = setInterval(() => {
+            t--; ui.startTimer.innerText = t;
+            if(t <= 0) { clearInterval(iv); startPlayingPhase(); }
+        }, 1000);
+    }
+
+    function startPlayingPhase() {
+        hideAll(); ui.game.classList.remove('hidden');
+
+        let hostPoisons = (state.round % 2 !== 0);
+        state.myRole = (isHost === hostPoisons) ? 'poisoner' : 'drinker';
+
+        state.myAction = null; state.opAction = null; state.myVote = null; state.opVote = null;
+        ui.reasonInput.value = ''; ui.reasonInput.disabled = false; selectedCup = null;
+        ui.submitBtn.disabled = false; ui.submitBtn.innerText = "[ ZAPIECZĘTUJ MYŚLI ]";
+        ui.opStatus.innerText = "[ ] Przeciwnik tka zaklęcie..."; ui.opStatus.style.color = "#7a6352";
+        ui.voteYes.classList.remove('hidden'); ui.voteNo.classList.remove('hidden');
+        ui.voteWait.classList.add('hidden'); ui.chatHistory.innerHTML = '';
+
+        if(state.myRole === 'poisoner') {
+            ui.roleTitle.innerText = `❖ RUNDA ${state.round}/5 | NALEWASZ JADOWITĄ KREW`;
+            document.getElementById('question-text').innerText = "Do którego kielicha wlewasz truciznę?";
+        } else {
+            ui.roleTitle.innerText = `❖ RUNDA ${state.round}/5 | WYBIERASZ KIELICH`;
+            document.getElementById('question-text').innerText = "Który kielich wybierasz do wypicia?";
+        }
+
+        let mySideId = isHost ? 'host_side' : 'guest_side';
+        let opSideId = isHost ? 'guest_side' : 'host_side';
+
+        ui.cupOptions.innerHTML = `
+            <div class="cup-option" id="cup-${mySideId}" onclick="selectCup('${mySideId}')">Kielich bliżej MNIE</div>
+            <div class="cup-option" id="cup-${opSideId}" onclick="selectCup('${opSideId}')">Kielich bliżej PRZECIWNIKA</div>
+        `;
+
+        timeLeft = 120; ui.roundTimer.innerText = timeLeft;
+        clearInterval(timerInterval);
+        
+        timerInterval = setInterval(() => {
+            timeLeft--; ui.roundTimer.innerText = timeLeft;
+            if(timeLeft <= 0) {
+                clearInterval(timerInterval);
+                if(!state.myAction) {
+                    if(!selectedCup || !ui.reasonInput.value.trim()) kickPlayer("Czas mija! Brak decyzji rozgniewał Bogów.");
+                    else submitAction();
+                }
+            }
+        }, 1000);
+    }
+
+    let selectedCup = null;
+    function selectCup(cupId) {
+        if(state.myAction) return;
+        selectedCup = cupId;
+        document.querySelectorAll('.cup-option').forEach(el => el.classList.remove('selected'));
+        document.getElementById(`cup-${cupId}`).classList.add('selected');
+    }
+
+    function submitAction() {
+        if(!selectedCup) return alert("BŁĄD: Musisz wskazać kielich!");
+        let reason = ui.reasonInput.value.trim();
+        if(!reason) return alert("BŁĄD: Wpisz swoje zamiary na kartce!");
+        
+        state.myAction = { cup: selectedCup, reason: reason };
+        ui.submitBtn.disabled = true; ui.submitBtn.innerText = "[ ZAPIECZĘTOWANO - CZEKAM ]";
+        ui.reasonInput.disabled = true;
+
+        conn.send({ type: 'ACTION', data: state.myAction });
+        checkBothSubmitted();
+    }
+
+    function checkBothSubmitted() {
+        if(state.myAction && state.opAction) {
+            clearInterval(timerInterval); timeLeft = 0;
+            ui.roundTimer.innerText = 0;
+            setTimeout(showRevealPhase, 1000);
+        }
+    }
+
+    function showRevealPhase() {
+        hideAll(); ui.vote.classList.remove('hidden');
+
+        let pAction = state.myRole === 'poisoner' ? state.myAction : state.opAction;
+        let dAction = state.myRole === 'drinker' ? state.myAction : state.opAction;
+
+        let survived = (pAction.cup !== dAction.cup);
+
+        if(survived && state.myRole === 'drinker') state.myScore++;
+        else if(survived && state.myRole === 'poisoner') state.opScore++;
+
+        let resHtml = `<h3>WYNIK: ${survived ? '<span style="color:#d4af37;">PRZEŻYCIE (+1 punkt)</span>' : '<span style="color:#8b0000;">ŚMIERĆ W MĘCZARNIACH</span>'}</h3>`;
+        resHtml += `<p>Pozycja Jadowitej Krwi: <strong style="color:#ff4d4d">${getLocalCupName(pAction.cup)}</strong> | Wypito: <strong style="color:#e6d3a8">${getLocalCupName(dAction.cup)}</strong></p><hr style="border:1px solid #8b6508;">`;
+        resHtml += `<p><strong>Myśl Nalewającego:</strong> <em>"${pAction.reason}"</em></p>`;
+        resHtml += `<p><strong>Myśl Pijącego:</strong> <em>"${dAction.reason}"</em></p>`;
+
+        ui.revealArea.innerHTML = resHtml;
+        updateStatus(); ui.voteWait.innerText = "Oczekuję na osąd przeciwnika...";
+        
+        chatTimeLeft = 180; ui.chatTimer.innerText = chatTimeLeft;
+        clearInterval(chatTimerInterval);
+        
+        chatTimerInterval = setInterval(() => {
+            chatTimeLeft--; ui.chatTimer.innerText = chatTimeLeft;
+            if(chatTimeLeft <= 0) {
+                clearInterval(chatTimerInterval);
+                if(state.myVote === null) submitVote(false);
+            }
+        }, 1000);
+    }
+
+    function getLocalCupName(cupId) { 
+        return cupId === (isHost ? 'host_side' : 'guest_side') ? "Kielich bliżej Ciebie" : "Kielich bliżej Przeciwnika";
+    }
+
+    function sendChat() {
+        let msg = ui.chatInput.value.trim();
+        if(!msg) return;
+        appendChat("Ty", msg, "msg-me");
+        conn.send({ type: 'CHAT', data: msg });
+        ui.chatInput.value = '';
+    }
+
+    function appendChat(sender, msg, cssClass) {
+        let p = document.createElement('p'); p.innerHTML = `<span class="${cssClass}">[${sender}]</span>: ${msg}`;
+        ui.chatHistory.appendChild(p); ui.chatHistory.scrollTop = ui.chatHistory.scrollHeight;
+    }
+
+    ui.chatInput.addEventListener('keypress', function (e) { if (e.key === 'Enter') sendChat(); });
+
+    function submitVote(isYes) {
+        state.myVote = isYes;
+        ui.voteYes.classList.add('hidden'); ui.voteNo.classList.add('hidden');
+        ui.voteWait.classList.remove('hidden');
+        conn.send({ type: 'VOTE', data: isYes });
+        checkVotes();
+    }
+
+    function checkVotes() {
+        if(state.myVote !== null && state.opVote !== null) {
+            clearInterval(chatTimerInterval); ui.chatTimer.innerText = "0";
+            
+            if(state.myVote === true && state.opVote === true) {
+                appendChat("MISTRZ GRY", "WASZE MYŚLI BYŁY ZGODNE. Dodatkowy punkt nagrody!", "msg-sys");
+                if(state.myRole === 'drinker') state.myScore++;
+                else state.opScore++;
+            } else appendChat("MISTRZ GRY", "ZBYT DUŻY CHAOS W MYŚLACH. Runda bez bonusa.", "msg-sys");
+
+            updateStatus();
+
+            let waitTime = 10;
+            ui.voteWait.innerHTML = `Werdykt bogów zapadł. Następna próba za <strong id="next-phase-timer" style="color:#d4af37;">${waitTime}</strong>s...`;
+            
+            let waitIv = setInterval(() => {
+                waitTime--; let el = document.getElementById('next-phase-timer');
+                if(el) el.innerText = waitTime;
+
+                if(waitTime <= 0) {
+                    clearInterval(waitIv);
+                    if(isHost) {
+                        if(state.round < state.maxRounds) {
+                            state.round++; start5SecCountdown(); conn.send({ type: 'NEXT_ROUND' });
+                        } else { endGame(); conn.send({ type: 'END_GAME' }); }
+                    }
+                }
+            }, 1000);
+        }
+    }
+
+    function updateStatus() { 
+        ui.status.innerText = `❖ WYNIKI ❖ Ty: ${state.myScore} | Przeciwnik: ${state.opScore}`; 
+    }
+
+    function endGame() {
+        hideAll(); ui.lobby.classList.remove('hidden');
+        let resHtml = `<h2>KONIEC PRÓBY</h2><p>Twój wynik: ${state.myScore}</p><p>Wynik przeciwnika: ${state.opScore}</p>`;
+        
+        if(state.myScore > state.opScore) resHtml += "<h3 style='color:#d4af37'>ZYSKUJESZ TYTUŁ ARCYMISTRZA!</h3>";
+        else if(state.myScore < state.opScore) resHtml += "<h3 style='color:#8b0000'>PORAŻKA... WRACASZ DO CECHU.</h3>";
+        else resHtml += "<h3 style='color:#a98f5a'>REMIS. BOGOWIE SĄ NIERÓZDZIELNI.</h3>";
+
+        ui.disconnectMsg.innerHTML = resHtml;
+        ui.disconnectMsg.classList.remove('hidden', 'error');
+        if(conn) conn.close();
+    }
+    
+    function checkServerStatus() {
+        const statusDiv = document.getElementById('server-status');
+        
+        const pingPeer = new Peer(PEER_CONFIG);
+        
+        const timeout = setTimeout(() => {
+            statusDiv.innerHTML = 'Stan Sfery Astralnej: <strong style="color:#8b0000;">OFFLINE (Przekroczono czas. Magia słabnie, odśwież stronę)</strong>';
+            statusDiv.style.borderLeftColor = '#8b0000';
+            pingPeer.destroy();
+        }, 60000); 
+
+        pingPeer.on('open', () => {
+            clearTimeout(timeout);
+            statusDiv.innerHTML = 'Stan Sfery Astralnej: <strong style="color:#d4af37;">ONLINE (Sfera gotowa do walki)</strong>';
+            statusDiv.style.borderLeftColor = '#d4af37';
+            pingPeer.destroy(); 
+        });
+        
+        pingPeer.on('error', (err) => {
+            if(err.type === 'network' || err.type === 'server-error') {
+                clearTimeout(timeout);
+                statusDiv.innerHTML = 'Stan Sfery Astralnej: <strong style="color:#8b0000;">OFFLINE (Brak wizji, przebudź swój serwer)</strong>';
+                statusDiv.style.borderLeftColor = '#8b0000';
+            }
+        });
+    }
+
+    window.addEventListener('load', checkServerStatus);
+</script>
+</body>
+</html>
