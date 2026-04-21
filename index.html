@@ -109,9 +109,9 @@
     .loading-dots:after { content: '.'; animation: dots 1.5s steps(5, end) infinite; }
     @keyframes dots { 0%, 20% { content: '.'; } 40% { content: '..'; } 60%, 100% { content: '...'; } }
 
-    /* --- NOWY KOD - STYLE PRZYCISKU DONATE --- */
+    /* --- KOD - STYLE PRZYCISKU DONATE --- */
     .donate-footer {
-        margin-top: auto; /* Wypycha stopkę na sam dół */
+        margin-top: auto; 
         padding-top: 30px;
         text-align: center;
     }
@@ -131,7 +131,6 @@
         border-bottom-color: #d4af37;
         text-shadow: 0 0 8px rgba(212, 175, 55, 0.5);
     }
-    /* ----------------------------------------- */
 
     @media (max-width: 600px) {
         body { margin: 5px; padding: 10px; border-width: 2px; }
@@ -219,7 +218,7 @@
 
 <div id="vote-panel" class="panel hidden">
     <div class="flex-row">
-        <h3>❖ FAZA: REWELACJA</h3>
+        <h3 id="vote-title">❖ FAZA: REWELACJA</h3>
         <div class="timer">CZAS: <span id="chat-timer">180</span>s</div>
     </div>
     
@@ -241,8 +240,9 @@
 </div>
 
 <div class="donate-footer">
-    <a href="Thttps://ko-fi.com/pogromca" target="_blank" class="donate-link">☕ Wrzuć monetę do sakwy Mistrza Gry</a>
+    <a href="TWÓJ_LINK_DO_ZBIORKI_TUTAJ" target="_blank" class="donate-link">☕ Wrzuć monetę do sakwy Mistrza Gry</a>
 </div>
+
 <script>
     // --- KONFIGURACJA TWOJEGO SERWERA RENDER / RAILWAY ---
     const PEER_CONFIG = {
@@ -280,7 +280,8 @@
         chatInput: document.getElementById('chat-input'), voteWait: document.getElementById('vote-wait'),
         voteYes: document.getElementById('vote-yes'), voteNo: document.getElementById('vote-no'),
         chatTimer: document.getElementById('chat-timer'), disconnectMsg: document.getElementById('disconnect-msg'),
-        queueStatus: document.getElementById('queue-status'), queueText: document.getElementById('queue-text')
+        queueStatus: document.getElementById('queue-status'), queueText: document.getElementById('queue-text'),
+        voteTitle: document.getElementById('vote-title')
     };
 
     ui.status.innerText = "❖ OCZEKIWANIE NA WEZWANIE ❖";
@@ -472,6 +473,7 @@
 
     function startPlayingPhase() {
         hideAll(); ui.game.classList.remove('hidden');
+        updateStatus(); // Odświeżamy status, by pokazać numer rundy
 
         let hostPoisons = (state.round % 2 !== 0);
         state.myRole = (isHost === hostPoisons) ? 'poisoner' : 'drinker';
@@ -484,10 +486,10 @@
         ui.voteWait.classList.add('hidden'); ui.chatHistory.innerHTML = '';
 
         if(state.myRole === 'poisoner') {
-            ui.roleTitle.innerText = `❖ RUNDA ${state.round}/5 | NALEWASZ JADOWITĄ KREW`;
+            ui.roleTitle.innerText = `❖ RUNDA ${state.round}/${state.maxRounds} | NALEWASZ JADOWITĄ KREW`;
             document.getElementById('question-text').innerText = "Do którego kielicha wlewasz truciznę?";
         } else {
-            ui.roleTitle.innerText = `❖ RUNDA ${state.round}/5 | WYBIERASZ KIELICH`;
+            ui.roleTitle.innerText = `❖ RUNDA ${state.round}/${state.maxRounds} | WYBIERASZ KIELICH`;
             document.getElementById('question-text').innerText = "Który kielich wybierasz do wypicia?";
         }
 
@@ -545,6 +547,7 @@
 
     function showRevealPhase() {
         hideAll(); ui.vote.classList.remove('hidden');
+        ui.voteTitle.innerText = `❖ RUNDA ${state.round}/${state.maxRounds} | FAZA: REWELACJA`;
 
         let pAction = state.myRole === 'poisoner' ? state.myAction : state.opAction;
         let dAction = state.myRole === 'drinker' ? state.myAction : state.opAction;
@@ -633,7 +636,7 @@
     }
 
     function updateStatus() { 
-        ui.status.innerText = `❖ WYNIKI ❖ Ty: ${state.myScore} | Przeciwnik: ${state.opScore}`; 
+        ui.status.innerText = `❖ RUNDA ${state.round}/${state.maxRounds} | WYNIKI ❖ Ty: ${state.myScore} - Przeciwnik: ${state.opScore}`; 
     }
 
     function endGame() {
